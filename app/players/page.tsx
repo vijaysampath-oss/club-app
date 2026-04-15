@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import LoggedOutCard from "@/components/LoggedOutCard";
 import React, { useEffect, useMemo, useState } from "react";
-import { API } from "@/lib/api";
+import { clubJson } from "@/lib/api";
 import AppShell, {
   AppRole,
   cardStyle,
@@ -24,7 +24,14 @@ type Player = {
   created_at: string;
 };
 
-function getUserRole(session: any): AppRole {
+type AuthSession = {
+  user?: {
+    role?: string;
+    email?: string | null;
+  } | null;
+} | null;
+
+function getUserRole(session: AuthSession): AppRole {
   const role = session?.user?.role;
   if (role === "admin" || role === "member" || role === "not_approved") {
     return role;
@@ -34,6 +41,10 @@ function getUserRole(session: any): AppRole {
   if (email === "vijaysampath@gmail.com") return "admin";
 
   return "not_approved";
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export default function PlayersPage() {
@@ -55,11 +66,11 @@ export default function PlayersPage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API}/players/`, { cache: "no-store" });
-      const data = await res.json();
-      setPlayers(data.players || data || []);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load players");
+      const data = await clubJson<{ players?: Player[] } | Player[]>("/players");
+      const list = Array.isArray(data) ? data : data.players || [];
+      setPlayers(list);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, "Failed to load players"));
     } finally {
       setLoading(false);
     }
@@ -71,7 +82,7 @@ export default function PlayersPage() {
     setSubmitError(null);
 
     try {
-      const res = await fetch(`${API}/players/`, {
+      await clubJson("/players", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -81,14 +92,12 @@ export default function PlayersPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Create player failed");
-
       setName("");
       setPhone("");
       setSkillLevel("");
       await loadPlayers();
-    } catch (e: any) {
-      setSubmitError(e?.message || "Failed to create player");
+    } catch (error: unknown) {
+      setSubmitError(getErrorMessage(error, "Failed to create player"));
     } finally {
       setSubmitting(false);
     }

@@ -10,7 +10,14 @@ import AppShell, {
   secondaryTextStyle,
 } from "@/components/AppShell";
 
-function getUserRole(session: any): AppRole {
+type AuthSession = {
+  user?: {
+    role?: string;
+    email?: string | null;
+  } | null;
+} | null;
+
+function getUserRole(session: AuthSession): AppRole {
   const role = session?.user?.role;
   if (role === "admin" || role === "member" || role === "not_approved") {
     return role;

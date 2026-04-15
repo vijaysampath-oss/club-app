@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import LoggedOutCard from "@/components/LoggedOutCard";
 import React, { useEffect, useMemo, useState } from "react";
-import { API } from "@/lib/api";
+import { clubJson } from "@/lib/api";
 import { getUserAccess } from "@/lib/access";
 import AppShell, {
   cardStyle,
@@ -11,7 +11,6 @@ import AppShell, {
   labelStyle,
   primaryButtonStyle,
   sectionTitleStyle,
-  secondaryTextStyle,
 } from "@/components/AppShell";
 
 type SessionItem = {
@@ -41,6 +40,10 @@ function formatSessionTime(value: string) {
   return d.toLocaleString();
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function HomePage() {
   const { data: session, status } = useSession();
 
@@ -67,11 +70,10 @@ export default function HomePage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API}/sessions/`, { cache: "no-store" });
-      const data = await res.json();
+      const data = await clubJson<{ sessions?: SessionItem[] }>("/sessions");
       setSessions(data.sessions || []);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load sessions");
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, "Failed to load sessions"));
     } finally {
       setLoading(false);
     }
@@ -83,7 +85,7 @@ export default function HomePage() {
     setSubmitError(null);
 
     try {
-      const res = await fetch(`${API}/sessions/`, {
+      await clubJson("/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -95,16 +97,14 @@ export default function HomePage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Create failed");
-
       setTitle("");
       setSessionTime("");
       setVenue("");
       setCapacity(16);
 
       await loadSessions();
-    } catch (e: any) {
-      setSubmitError(e?.message || "Failed to create session");
+    } catch (error: unknown) {
+      setSubmitError(getErrorMessage(error, "Failed to create session"));
     } finally {
       setSubmitting(false);
     }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import LoggedOutCard from "@/components/LoggedOutCard";
 import React, { useEffect, useMemo, useState } from "react";
-import { API } from "@/lib/api";
+import { clubJson } from "@/lib/api";
 import AppShell, {
   AppRole,
   cardStyle,
@@ -32,7 +32,14 @@ type Player = {
   status: string;
 };
 
-function getUserRole(session: any): AppRole {
+type AuthSession = {
+  user?: {
+    role?: string;
+    email?: string | null;
+  } | null;
+} | null;
+
+function getUserRole(session: AuthSession): AppRole {
   const role = session?.user?.role;
   if (role === "admin" || role === "member" || role === "not_approved") {
     return role;
@@ -56,6 +63,10 @@ function isUpcomingOpenSession(session: SessionItem) {
   return session.status?.toLowerCase() === "open" && sessionDate > now;
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 export default function VotesPage() {
   const { data: session, status } = useSession();
   const role = getUserRole(session);
@@ -76,18 +87,18 @@ export default function VotesPage() {
     setError(null);
 
     try {
-      const [sessionsRes, playersRes] = await Promise.all([
-        fetch(`${API}/sessions/`, { cache: "no-store" }),
-        fetch(`${API}/players/`, { cache: "no-store" }),
+      const [sessionsData, playersData] = await Promise.all([
+        clubJson<{ sessions?: SessionItem[] }>("/sessions"),
+        clubJson<{ players?: Player[] } | Player[]>("/players"),
       ]);
 
-      const sessionsData = await sessionsRes.json();
-      const playersData = await playersRes.json();
-
       setSessions(sessionsData.sessions || []);
-      setPlayers(playersData.players || playersData || []);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load voting data");
+      const playersList = Array.isArray(playersData)
+        ? playersData
+        : playersData.players || [];
+      setPlayers(playersList);
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, "Failed to load voting data"));
     } finally {
       setLoading(false);
     }
@@ -100,7 +111,7 @@ export default function VotesPage() {
     setSubmitError(null);
 
     try {
-      const res = await fetch(`${API}/votes/`, {
+      await clubJson("/votes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,12 +120,10 @@ export default function VotesPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Vote failed");
-
       setSubmitMessage("Thank you. Your vote has been recorded.");
       setSelectedPlayerId("");
-    } catch (e: any) {
-      setSubmitError(e?.message || "Failed to submit vote");
+    } catch (error: unknown) {
+      setSubmitError(getErrorMessage(error, "Failed to submit vote"));
     } finally {
       setSubmitting(false);
     }

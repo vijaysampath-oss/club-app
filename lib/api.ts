@@ -1,17 +1,25 @@
-export const API = "http://127.0.0.1:8000";
-import { getSession } from "next-auth/react";
+export const API = "/api";
 
-export async function createSession(data: any) {
-  const session = await getSession();
+function apiUrl(path: string): string {
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return `${window.location.origin}${API}${suffix}`;
+  }
+  return `${API}${suffix}`;
+}
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/sessions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-user-email": session?.user?.email || "",
-    },
-    body: JSON.stringify(data),
+export async function clubJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = apiUrl(path);
+  const res = await fetch(url, {
+    credentials: "include",
+    cache: "no-store",
+    ...init,
   });
-
-  return res.json();
+  const data = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok) {
+    throw new Error(
+      typeof data.error === "string" ? data.error : `Request failed (${res.status})`
+    );
+  }
+  return data as T;
 }
