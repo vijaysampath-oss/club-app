@@ -1,6 +1,10 @@
 import GoogleProvider from "next-auth/providers/google";
 import { getUserAccess } from "@/lib/access";
 
+if (process.env.VERCEL_URL && !process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
+}
+
 type AppRole = "admin" | "member" | "not_approved";
 
 type JwtToken = {
