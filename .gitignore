@@ -18,6 +18,7 @@ api/.env.*
 !api/.env.example
 
 # Next.js (app lives under web/)
+.next/
 web/.next/
 web/out/
 web/.vercel
