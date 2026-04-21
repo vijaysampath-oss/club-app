@@ -9,14 +9,14 @@ export default function IntroBanner() {
           background: "#fafafa",
         }}
       >
-        <p style={{ margin: 0, lineHeight: 1.6 }}>
+        <p style={{ margin: 0, lineHeight: 1.6, color: "#1f2937" }}>
           Welcome to Hi-Sport Badminton Club. We are a friendly badminton community
           focused on fitness, fun, and regular play for players of different skill
           levels. This portal helps members view upcoming sessions and stay connected
           with the club.
         </p>
   
-        <p style={{ marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>
+        <p style={{ marginTop: 12, marginBottom: 0, lineHeight: 1.6, color: "#1f2937" }}>
           Register as a player to view sessions and play. Once registered and
           approved, you will be able to participate in club sessions.
         </p>
@@ -34,7 +34,7 @@ export default function IntroBanner() {
             paddingTop: 10,
             borderTop: "1px solid #e5e5e5",
             fontSize: 14,
-            color: "#555",
+            color: "#374151",
             lineHeight: 1.6,
           }}
         >

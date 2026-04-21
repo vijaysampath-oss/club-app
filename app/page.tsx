@@ -21,6 +21,8 @@ type SessionItem = {
   capacity: number;
   status: string;
   created_at: string;
+  registration_count?: number;
+  user_joined?: boolean;
 };
 
 function toPostgresTimestamp(dtLocal: string) {
@@ -64,6 +66,9 @@ export default function HomePage() {
   const [capacity, setCapacity] = useState<number>(16);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [joiningSessionId, setJoiningSessionId] = useState<number | null>(null);
+  const [joinMessage, setJoinMessage] = useState<string | null>(null);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   async function loadSessions() {
     setLoading(true);
@@ -110,6 +115,24 @@ export default function HomePage() {
     }
   }
 
+  async function joinSession(sessionId: number) {
+    setJoiningSessionId(sessionId);
+    setJoinMessage(null);
+    setJoinError(null);
+
+    try {
+      const response = await clubJson<{ message?: string }>(`/sessions/${sessionId}/join`, {
+        method: "POST",
+      });
+      setJoinMessage(response.message ?? "Joined session successfully.");
+      await loadSessions();
+    } catch (error: unknown) {
+      setJoinError(getErrorMessage(error, "Failed to join session"));
+    } finally {
+      setJoiningSessionId(null);
+    }
+  }
+
   useEffect(() => {
     if (status === "authenticated" && (isAdmin || isApproved)) {
       loadSessions();
@@ -139,7 +162,7 @@ export default function HomePage() {
           <h2 style={{ marginTop: 0, marginBottom: 8 }}>
             Account pending approval
           </h2>
-          <p style={{ margin: 0, color: "#4b5563", lineHeight: 1.6 }}>
+          <p style={{ margin: 0, color: "#374151", lineHeight: 1.6 }}>
             Your account is not yet approved. Please contact the admin to gain
             access to sessions and club features.
           </p>
@@ -228,17 +251,43 @@ export default function HomePage() {
 
         {loading && <div style={cardStyle}>Loading sessions...</div>}
         {error && <div style={{ ...cardStyle, color: "red" }}>{error}</div>}
+        {joinMessage && <div style={{ ...cardStyle, color: "#166534" }}>{joinMessage}</div>}
+        {joinError && <div style={{ ...cardStyle, color: "#b91c1c" }}>{joinError}</div>}
         {!loading && visibleSessions.length === 0 && (
           <div style={cardStyle}>No sessions available</div>
         )}
 
         {visibleSessions.map((s) => (
           <div key={s.id} style={{ ...cardStyle, marginBottom: 12 }}>
-            <div>
-              <strong>{s.title}</strong>
-              <div>{formatSessionTime(s.session_time)}</div>
-              {s.venue && <div>Venue: {s.venue}</div>}
-              <div>Capacity: {s.capacity}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+              <div>
+                <strong>{s.title}</strong>
+                <div>{formatSessionTime(s.session_time)}</div>
+                {s.venue && <div>Venue: {s.venue}</div>}
+                <div>Capacity: {s.capacity}</div>
+                <div>Joined: {s.registration_count ?? 0}</div>
+                <div>Spots left: {Math.max(0, s.capacity - (s.registration_count ?? 0))}</div>
+              </div>
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => joinSession(s.id)}
+                  style={{ ...primaryButtonStyle, minWidth: 140, alignSelf: "flex-start" }}
+                  disabled={
+                    joiningSessionId === s.id ||
+                    !!s.user_joined ||
+                    (s.registration_count ?? 0) >= s.capacity
+                  }
+                >
+                  {joiningSessionId === s.id
+                    ? "Joining..."
+                    : s.user_joined
+                    ? "Joined"
+                    : (s.registration_count ?? 0) >= s.capacity
+                    ? "Full"
+                    : "Join Session"}
+                </button>
+              )}
             </div>
           </div>
         ))}

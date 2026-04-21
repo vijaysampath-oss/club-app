@@ -69,7 +69,7 @@ export const sectionTitleStyle: React.CSSProperties = {
 
 export const secondaryTextStyle: React.CSSProperties = {
   fontSize: 14,
-  color: "#6b7280",
+  color: "#374151",
 };
 
 export const inputStyle: React.CSSProperties = {

@@ -151,7 +151,7 @@ export default function VotesPage() {
       <AppShell role={role} title="Hi-Sport Badminton Club — Votes">
         <div style={{ ...cardStyle, marginTop: 20 }}>
           <h2 style={{ marginTop: 0, marginBottom: 8 }}>Approval required</h2>
-          <p style={{ margin: 0, color: "#4b5563", lineHeight: 1.6 }}>
+          <p style={{ margin: 0, color: "#374151", lineHeight: 1.6 }}>
             Voting is available only to approved members. Your account is still
             pending approval.
           </p>

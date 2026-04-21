@@ -59,7 +59,7 @@ export default function LoggedOutCard({
           style={{
             marginTop: 10,
             marginBottom: 0,
-            color: "#4b5563",
+            color: "#374151",
             lineHeight: 1.6,
           }}
         >
@@ -70,7 +70,7 @@ export default function LoggedOutCard({
           style={{
             marginTop: 10,
             marginBottom: 0,
-            color: "#6b7280",
+            color: "#374151",
             fontSize: 14,
             lineHeight: 1.6,
           }}
@@ -110,7 +110,7 @@ export default function LoggedOutCard({
             What happens next?
           </h2>
 
-          <div style={{ color: "#4b5563", lineHeight: 1.8, fontSize: 15 }}>
+          <div style={{ color: "#374151", lineHeight: 1.8, fontSize: 15 }}>
             <div>1. Sign in using your email account</div>
             <div>2. Your account will be reviewed by the admin</div>
             <div>3. Once approved, you can access sessions and club features</div>

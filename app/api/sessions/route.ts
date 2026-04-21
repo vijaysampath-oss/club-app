@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { dbQuery } from "@/lib/db";
+import { jsonDbError } from "@/lib/route-db-error";
 import { requireRole } from "@/lib/server-access";
 
 export const runtime = "nodejs";
@@ -14,20 +15,46 @@ type SessionPayload = {
   status?: string;
 };
 
+async function ensureSessionRegistrationsTable() {
+  await dbQuery(
+    `CREATE TABLE IF NOT EXISTS session_registrations (
+      id SERIAL PRIMARY KEY,
+      session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+      user_email TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (session_id, user_email)
+    )`
+  );
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ["admin", "member"]);
   if (!auth.ok) return auth.response;
 
   try {
+    await ensureSessionRegistrationsTable();
+    const normalizedEmail = (auth.email ?? "").toLowerCase();
     const result = await dbQuery(
-      `SELECT id, title, session_time, venue, capacity, status, created_at
-       FROM sessions
-       ORDER BY session_time DESC, id DESC`
+      `SELECT
+         s.id,
+         s.title,
+         s.session_time,
+         s.venue,
+         s.capacity,
+         s.status,
+         s.created_at,
+         COUNT(sr.session_id)::INT AS registration_count,
+         COALESCE(BOOL_OR(sr.user_email = $1), false) AS user_joined
+       FROM sessions s
+       LEFT JOIN session_registrations sr ON sr.session_id = s.id
+       GROUP BY s.id, s.title, s.session_time, s.venue, s.capacity, s.status, s.created_at
+       ORDER BY s.session_time DESC, s.id DESC`,
+      [normalizedEmail]
     );
 
     return NextResponse.json({ sessions: result.rows });
-  } catch {
-    return NextResponse.json({ error: "Failed to load sessions" }, { status: 500 });
+  } catch (err) {
+    return jsonDbError("GET /api/sessions", err, "Failed to load sessions");
   }
 }
 
@@ -36,6 +63,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   try {
+    await ensureSessionRegistrationsTable();
     const body = (await request.json()) as SessionPayload;
     const title = body.title?.trim();
     const sessionTime = body.session_time?.trim();
@@ -88,7 +116,7 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json(result.rows[0], { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Failed to create session" }, { status: 500 });
+  } catch (err) {
+    return jsonDbError("POST /api/sessions", err, "Failed to create session");
   }
 }
