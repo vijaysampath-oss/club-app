@@ -10,6 +10,7 @@ export type AppRole = "admin" | "member" | "not_approved";
 const pageWrapStyle: React.CSSProperties = {
   minHeight: "100vh",
   background: "#f8fafc",
+  color: "#111827",
   padding: "24px 16px 32px",
 };
 
@@ -58,6 +59,7 @@ export const cardStyle: React.CSSProperties = {
   borderRadius: 18,
   padding: 20,
   boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+  color: "#111827",
 };
 
 export const sectionTitleStyle: React.CSSProperties = {
@@ -69,7 +71,7 @@ export const sectionTitleStyle: React.CSSProperties = {
 
 export const secondaryTextStyle: React.CSSProperties = {
   fontSize: 14,
-  color: "#6b7280",
+  color: "#374151",
 };
 
 export const inputStyle: React.CSSProperties = {

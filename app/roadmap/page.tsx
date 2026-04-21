@@ -33,6 +33,7 @@ const listStyle: React.CSSProperties = {
   margin: "8px 0 0 18px",
   padding: 0,
   lineHeight: 1.8,
+  color: "#374151",
 };
 
 export default function RoadMapPage() {

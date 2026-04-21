@@ -21,7 +21,7 @@ export default function IntroBanner() {
           approved, you will be able to participate in club sessions.
         </p>
   
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, color: "#111827" }}>
           <b>Contact Admin:</b>{" "}
           <a href="mailto:vijaysampath@gmail.com" style={{ color: "#111827" }}>
             vijaysampath@gmail.com
